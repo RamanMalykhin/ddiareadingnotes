@@ -45,4 +45,3 @@
   - some examples:
     - neo4j
     - Amazon Neptune
-    - 
