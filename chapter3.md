@@ -59,8 +59,8 @@ flowchart LR
     ref10 --> smalleaf2[leaf node for 210 =< key < 230]
     ref12 --> smalleaf3[leaf node for 250 =< key < 270]
     
-    style ref3 color:red;
-    style ref11 color:red;
-    style val2 color:red;
-    linkStyle 26,27 color:red;
+    style ref3 color:yellow;
+    style ref11 color:yellow;
+    style val2 color:yellow;
+    linkStyle 26,27 stroke:#ff4,stroke-width:4px,color:yellow;
 ```
