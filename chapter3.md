@@ -81,3 +81,11 @@ Comparison:
 - LSM-trees tend to be more performant on magnetic hard drives, where sequential writes are much faster than random writes
 - LSM-trees have less write amplification (less writes to disk for a given database update).
 - LSM-trees are harder to lock up, as the same key can exist in different places. B-trees can lock whole ranges of values directly on the tree(disk)
+
+Some other indexing approaches:
+- Covering index - some columns are stored in the index directly. When whole row - it's called a clustered index.
+- Multicolumn (but not covering) index
+- Fuzzy indexes for full-text search
+- Entire in-memory DB
+  - VoltDB, MemSQL, Oracle TimesTen
+  - Also Redis and CouchDB but they write to disc asynchronously
