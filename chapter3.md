@@ -28,7 +28,8 @@ OLAP performance may also be improved by pre-calculating results of a specific q
 
 OLAPs are usually relational, and relational DBs overwhelmingly use an approach called B-tree to index data and structure it on disk. But indexing is much more important for OLTP dbs where data is stored by row and whole rows are written at a time very frequently. 
 B-tree nodes are called blocks or pages, which contain memory pointers. Pointers are progressively more precise the furthest one gets from the root node. All nodes until the leaf nodes contain pointers to ranges between what keys a key for a given record must be found, and the ranges are widest at the root.
-Example
+
+This is an example of b-tree traversal with a query for value of key=231
 ```mermaid
 flowchart LR
     subgraph root
@@ -60,7 +61,6 @@ flowchart LR
     
     style ref3 color:red;
     style ref11 color:red;
-    style val2 color: red;
-    
-    linkStyle 26,27 stroke:#ff3,stroke-width:4px,color:red;
+    style val2 color:red;
+    linkStyle 26,27 color:red;
 ```
