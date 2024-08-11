@@ -26,7 +26,7 @@ Some examples:
     - Happens when search (e.g. `WHERE`) selects based on some value, but the concurrent update removes it from some of the results, making the search no longer valid.
 
 The most desirable solution to race conditions are "serializable" transactions. This does not have anything to do with JSON or XML serializability - rather, that means that the application can pretend that transactions are not concurrent and are running one after the other.
-Unfortunately, true serializability is performance-expensive and some databases provide weaker guarantees about isolation. Some options for weak guarantees:
+Unfortunately, true serializability is performance-expensive and some databases provide weaker guarantees about isolation. Some options for guarantees with varying strength of isolation:
 - Read-committed transactions
   - Very popular isolation level. Standard in Oracle, Postgres, and others. These only prevent dirty reads and dirty writes. 
   - Different ways of implementation exist. Most straightforward is row locking, but it can harm performance if one long-running read transaction locks up a wide range of rows. More modern way is snapshotting
