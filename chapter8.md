@@ -22,6 +22,7 @@ Some cases allow some information about the network to be gauged in case of part
 - If the process on the node crashes but the OS is still functional, a script may exist to alert other system nodes to the failure.
 - If the network router is aware of the IP of the target being unreachable it may return ICMP Destination Unreachable packet.
 - If the user has access to the physical infrastructure of the network, machines being unavailable may be checked on the network switches (however, for cloud services this is likely impossible).
+
 In all other cases, the only way (assuming the system is at least partially synchronous and timeouts can be used) to handle network failures is setting a connection timeout. However, since delays in partially synchronous systems can be unbounded, and both too long and too short timeouts are dangerous (too long and the failure detection is too slow, too short and the system performs unnecessary failovers), the only way is to set them experimentally by measuring the behavior of the system under expected load. 
 
 The handling part is also hard. Since shared-nothing machines by definition cannot access anything truly shared, there is no way for a single node to reliably know the state of all other nodes in the system. The unreliable network is the only source of communication, and major decisions about the network are usually made by consensus. 
