@@ -1,14 +1,19 @@
 As discussed in chapter 8, solutions to the issues of distributed systems, assuming they actually can be detected, usually lie in the direction of various abstract guarantees. These tend to be broadly classified as "consistency guarantees", especially in the database domain. 
 A very popular model is linearizability - being able to work with the system as though all of the transactions are happening in the same order. It makes the system extremely easy to reason about, but implementing linearizability is associated with a serious performance hit, especially in cases where network delay is big. 
+
 A weaker model is causal consistency, which does not guarantee a totally valid order of events (some are understood to be concurrent), but preserves a logical order between events. This can be achieved with Lamport timestamps - `(counter, node_id)`, where the counter is monotonically increasing for every time the node updates a given key in its data. This can help resolve conflicts eventually with no impact from e.g. clock skew, however, this cannot help resolve conflicts on-the-fly: if a given node receives a request to create a new some key, it has, at the moment of deciding how to process this request, no way of knowing whether another node is currently trying to process a conflicting request for the same key (assuming that keys must be unique). To achieve that, consensus is needed. 
+
 A very large amount of problems in distributed systems can be reduced to consensus between nodes:
   - Atomic transaction commits in databases
   - Ordering of messages in messaging systems
   - Locks and leases in highly contented systems
   - Split-brain-avoidant failure detection
   - Records with uniqueness constraints
+
 All of these problems do not exist in systems with a single node. A number of distributed systems opt for maintaining the same ease, by having single-leader distributed systems. This imposes a cost in terms of making situations when the leader has failed or is unreachable due to network failure hard to deal with. Several approaches exist:
   - Simply waiting for the leader to recover, and accept that the system is going to be unreachable unless the leader recovers.
   - Manual failover by requiring the human operator to appoint a new leader. This imposes a cost in terms of human capital, as for important systems this requires that an on-call system administrator be always available.
+
 Ridding a leader-driven system of these problems (which is important if the system is to be highly available) requires using an algorithm to choose a new leader automatically. This, again, requires consensus. So, in a way, for highly available distributed systems with no conflicts, consensus is inescapable. There are a number of algorithms for achieving it, and most implementers of distributed systems should not try to implement their own: using proven tools like Apache Zookeeper is advised instead.
+
 If a system has to be highly available but can accept the possibility conficts, a leaderless/multi-leader system can be used, these normally do not rely on consensus.
