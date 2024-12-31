@@ -9,9 +9,28 @@ In streaming, in place of a filesystem or distributed file system, transactions 
 
 Streaming systems are frequently used to consume transactional data from a database, and different approaches to it exist. The most obvious one is reading directly from the database log, but database logs are and historically were designed as internal system components, to be used for debugging purposes, but not as a frequently-used interface to the system. Systems to capture data from databases are referred to as CDC (change data capture). They can work with a variety of approaches - some use database triggers, some use replication logs. CDC systems are usually designed for a particular database and implement capture logic specific to that database's internals. 
 
-#TODO
-Use of time 
+There are different usecases that are specific to streaming workflows or have specific implications for them. 
+    - CEP (Complex Event Processing) is detecting certain patterns in events. CEP usually stores a SQL query (or a query in a similar declarative language) and continuously matches events against it. When a match is found, it emits a "complex event", containing all the events that compose the pattern the query is searching for.
+    - More broadly, there is analytics performed over streams, like computing rolling averages. Aggregations are usually performed over a time window. These systems sometimes use probabilistic algorithms to produce aggregates, which significantly improves performance, but at the cost of some accuracy.
+        - In some rare cases, there is a need to perform analytics over the whole timeframe since the beginning of the stream (the window is infinitely large). Some streaming systems support this, usually these that have very efficient log handling and compaction support. For Kafka, Samza and Kafka Streams support this.
 
-Joins
+When streaming systems deal with time windowing, they usually use the local time on the processing machine to determine it. The timestamp of event itself is not useful for this purpose as event processing is over a network, and can thus be delayed or not chronological. The fundamental challenge is the impossibility of knowing when all the events of a particular window have entered the system. Several ways of dealing with this exist:
+    - Ignoring the straggler events, because it is assumed that they are a small percentage. The percentage can be monitored and maintainers of the system can be alerted if the rate of late-coming straggler events for a given time range is too high.
+    - Publishing a correction message that instructs the downstream receivers to ignore the previous output for a given window and use the updated value based on updated data.
+Sometimes it is possible to issue a "completeness indicator" message, when the system has confidence that all the data for a given time window has been processed and no more corrections will happen. But this is tricky to do when the downstream system relies on different event brokers with different completeness thresholds and/or indicators, or lack thereof.
+Different types of windows may be used. 
+    - Tumbling windows have a fixed length and every event can belong to only one window.
+    - Hopping windows also have a fixed length but have an overlap that provides some smoothing (the overlap is referred to as "hop")
+    - Sliding windows contain all the event that occured within a given interval from the most recent event. Necessarily, these can overlap by as much as almost the whole duration if the events come very frequently.
+    - Session window uses some (non-timestamp) field to keep all the events together, and does not have a duration. It is similar to a GROUP BY predicate.
 
-Fault tolerance and exactly once semantics (microbatch, checkpointing, txn, idempotence)
+Stream processing and analytics has to use joins sometimes to add more data to a given event.
+    - Stream-stream joins events from two streams, based on some join key, usually searching for these events within a certain time window.
+    - Stream-table queries a database table (which is usually available to the stream processor locally) based on the join key and adds the results to the event.
+    - Table-table joins can also be used in streams, when two tables of a database are continuously updated, their states are frequently joined and the results are emitted as a stream of events (this is more of a stream data acquisition technique than processing).
+
+Unlike batching, streaming cannot re-run a job when it fails, because a streaming "job" never finishes, it runs as long as events come. Different approaches are used
+    - Microbatching, as the name implies, actually runs processing on small batches of events, usually up to a second. Then, batching approach (re-running the failed job) works. This is used in Spark Streaming. It requires careful tuning of the batch size so as not to slow down the stream too much (if batch is too big), but not cause too big of a scheduling overhead (if batch is too small).
+    - Checkpointing stores state to durable storage periodically, if the stream crashes the state is picked up from the most recent checkpoint.
+    - Implementing ACID-like guarantees for communication between the stream processing system and its state helps, and is doable for infra-system components. This is guaranteed in, eg., Kafka and Google Dataflow.
+    - Idempotence is when no matter how many times an operation is performed, the result is always the same (it is, in a way, stateless). This can be implemented using metadata like providing a unique monotonically increasing offset of a message to downstream consumers/to the state. Then, it is easy to say if a given update has already been applied, and repeated applications can be avoided. This is called "exactly once" processing guarantee. 
