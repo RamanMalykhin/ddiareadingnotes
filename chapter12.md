@@ -7,7 +7,7 @@ Both batch and stream processing are useful to maintain disparate systems connec
 
 An idea called "lambda architecture" exists where for a given downstream data source, streaming is used to update it approximately immediately, and batch is used to update it precisely with some delay. This comes at a cost of significant implementation effort and compute expense. However, some inspiration from this idea has made it into more mainstream approaches, and resulted in support for replaying and for querying HDFS added to some message brokers/stream processors, the importance of guaranteeing exactly-once processing, and for windowing on event time and not processing time (which is meaningless when streaming historical data and aggregating on a window).
 
-    # Unbundling DBs
+Philosophically, the totality of all data driven applications within an organizations (transactional DBs, analytical DBs, search indexes, dataflows that link them) can be viewed as one big database, with different indexes, triggers and storage procedures. The author believes that what could enable significant improvement in designing such systems is a universal high-level language for declaratively composing whole systems. As of writing the book, such a thing does not exist.
 
     # Designing around dataflow
 
