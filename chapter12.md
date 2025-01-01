@@ -16,12 +16,23 @@ Another potential source of inspiration for large-scale data systems is spreadsh
 Data within an organization follows two processes, which together compose the totality of the path that data undergoes from one end-user to the other - a "write path", which is all of the processes that are performed based on the new record appearing (perhaps as a transaction in the main OLTP store), and a "read path" which is all the processes that are performed when the end-user on the other end makes a request to read data that is downstream of that record. Role of various caches, indexes, materialized views and other tools is shifting the boundary between these paths. Shifting them in various ways presents different options for improving system performance.
 For example, typical web development pattern is keeping data on the server, and keeping clients (e.g. browsers) thin and stateless, forcing them to rely on the server to fetch data. This makes client network-bound in terms of performance, and useless without a network connection. In terms of "paths", this means that the write path never extends beyond the compute that the organization controls, data only goes downstream to clients as part of the read path. Extending the write path all the way to client devices and making them stateful would solve these problems. However, this would require fundamentally changing from a model based around HTTP request-response pattern, and towards a message-driven dataflow extending all the way through the org, which imposes steep requirements for performance of all analytical applications that produce derived state. 
 
-# Aiming for correctness 
-    # The end-to-end argument for DBs
-    
-    # Enforcing constraints 
-    
-    # Timeliness and integrity 
+Another point to consider is correctness. Databases may provide strong ACID guarantees, but that is not enough to protect against data corruption on a logical level. A concept of "end to end argument" is introduced, which says that features that require information available to the application (or applications) at the end of a communication system, aren't possible to be implemented by the system itself. In data terms, it means that just relying on ACID, exactly-once semantics, and other out-of-the-box guarantees is not enough and other, deeper techniques of enforcing correctness are needed. 
+
+Specifically challenging problem is one of uniqueness constraints. In a distributed system, there is a need to uniquely identify something throughout the entire system with all of the different data-driven applications and tools, and all of their replicas. Key insight is that this is a consensus problem. The typical solution is running everything through a single node, but that becomes a SPOF. Log-based streaming with exactly-once semantics based on a total order is helpful here.
+
+One important distinction to be made is between integrity and timeliness. Timeliness means that data throughout the system is in an up-to-date state. Systems may violate this property but later converge - this is "eventual consistency". However, integrity means that there is no corruption or false data, and no amount of waiting will fix the system if integrity is violated. So, integrity is much more important. 
+Exactly-once stream semantics are a mechanism for preserving integrity. Even without something like an atomic commit, a combination of features such as:
+- Representing the write operation as a single message
+- Deriving all downstream data from a single message using deterministic functions
+- Passing unique request IDs generated on the client through all layers of processing 
+- Making messages totally immutable and having derived data applications that can reprocess old data
+integrity can be preserved. 
+However, timeliness is hard to preserve, and sometimes there is a good business case for not supporting it. For example, a supermarket may sell more units than it carries, because its data is untimely (the number of units available in reality was less than in the system) - then it has to apologize to some clients or provide substitutes, and rectify the data errors later. In some cases it is easier to implement and acceptable from a business perspective.
+
+Despite all of the techniques used in different systems and individual components for preserving quality, bugs may and do still happen. It is important to build monitoring/auditing/data quality mechanisms to at least with some delay catch them, and not blindly trust what the system or its components promise to do, because bugs happen.
+
+Finally, data usage at scale comes with ethical and political issues. For example, users may be inconvenienced by insights made by a system based on statistical analysis, and remediation mechanisms are necessary. Better information for users about what data they provide is also important, as well as protection against data breaches, and even self-regulation about data collection, since extensive data can be used later for nefarious purposes. 
+
     
     # Trust but verify
 
